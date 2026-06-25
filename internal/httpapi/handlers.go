@@ -106,6 +106,8 @@ func (s *server) registerHeartbeatRoutes(api huma.API) {
 				}
 			}
 		}
+		// Cancel any pending dashboard auto-return: the kiosk is back.
+		s.cancelDashboardReturn()
 		s.kioskBeater.Beat(input.Version)
 		return nil, nil
 	})

@@ -20,6 +20,20 @@
 
 	function handleTouch() {
 		if (!sse.kiosk?.dashboard_url) return;
+
+		const timeoutSecs = sse.kiosk.dashboard_timeout_secs ?? 0;
+		if (timeoutSecs > 0) {
+			// Ask the backend to kill the cog process after the timeout so systemd
+			// restarts it back to /kiosk. keepalive ensures the request survives
+			// the full-page navigation that follows.
+			fetch('/api/kiosk/dashboard', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ timeout_secs: timeoutSecs }),
+				keepalive: true
+			});
+		}
+
 		goto('/kiosk/dashboard');
 	}
 </script>
