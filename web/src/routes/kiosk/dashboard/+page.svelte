@@ -1,64 +1,20 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { getSSEContext } from '$lib/sse.svelte';
-	import { XIcon } from '@lucide/svelte';
 
 	const sse = getSSEContext();
 
-	let dashboardUrl = $derived(sse.kiosk?.dashboard_url ?? '');
-	let timeoutSecs = $derived(sse.kiosk?.dashboard_timeout_secs ?? 0);
-
-	function returnToFrame() {
-		goto('/kiosk');
-	}
-
-	// If SSE is ready but no dashboard URL is configured, go back immediately.
+	// Navigate to the dashboard URL as soon as it's available from SSE.
+	// Full-page navigation avoids X-Frame-Options / CSP blocks from HA.
 	$effect(() => {
-		if (sse.ready && !dashboardUrl) {
-			returnToFrame();
+		const url = sse.kiosk?.dashboard_url;
+		if (url) {
+			window.location.replace(url);
+		} else if (sse.ready) {
+			// No URL configured — go back to the frame.
+			window.location.replace('/kiosk');
 		}
-	});
-
-	// Auto-return timer — runs whenever timeoutSecs becomes available from SSE.
-	// Pointer events (touch or mouse) reset the idle window.
-	$effect(() => {
-		if (timeoutSecs <= 0) return;
-
-		let timer: ReturnType<typeof setTimeout> | null = null;
-
-		function resetTimer() {
-			if (timer !== null) clearTimeout(timer);
-			timer = setTimeout(returnToFrame, timeoutSecs * 1000);
-		}
-
-		resetTimer();
-		window.addEventListener('pointerdown', resetTimer);
-
-		return () => {
-			if (timer !== null) clearTimeout(timer);
-			window.removeEventListener('pointerdown', resetTimer);
-		};
 	});
 </script>
 
-<div class="relative h-screen w-screen overflow-hidden bg-black">
-	{#if dashboardUrl}
-		<iframe
-			title="Dashboard"
-			src={dashboardUrl}
-			class="h-full w-full border-none"
-			allow="fullscreen"
-		></iframe>
-	{/if}
-
-	<button
-		type="button"
-		onclick={returnToFrame}
-		class="absolute right-4 bottom-4 flex items-center gap-2 rounded-full bg-black/60 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-opacity hover:bg-black/80"
-		aria-label="Return to picture frame"
-		data-testid="dashboard-back-button"
-	>
-		<XIcon class="size-4" />
-		Back to frame
-	</button>
-</div>
+<!-- Visible only for the fraction of a second before SSE delivers the URL. -->
+<div class="h-screen w-screen bg-black"></div>
