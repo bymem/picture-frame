@@ -65,13 +65,15 @@ type ConfigMetaBody struct {
 
 // DisplayDTO maps config.DisplayConfig.
 type DisplayDTO struct {
-	BlankAfter    string         `json:"blank_after" doc:"Idle duration before screen blanks, e.g. \"20m\""`
-	Backend       string         `json:"backend" enum:"wlopm,vcgencmd"`
-	Output        string         `json:"output" doc:"Wayland connector name, e.g. \"HDMI-A-1\" (wlopm only)"`
-	Locale        string         `json:"locale" doc:"BCP-47 date/time locale for the kiosk clock, e.g. en-US"`
-	HideClockDate bool           `json:"hide_clock_date" doc:"Hide the clock and date block on the kiosk overlay"`
-	Timezone      string         `json:"timezone" doc:"IANA timezone for the kiosk clock/date, e.g. Europe/Budapest; empty uses the browser timezone"`
-	Labels        KioskLabelsDTO `json:"labels"`
+	BlankAfter       string         `json:"blank_after" doc:"Idle duration before screen blanks, e.g. \"20m\""`
+	Backend          string         `json:"backend" enum:"wlopm,vcgencmd"`
+	Output           string         `json:"output" doc:"Wayland connector name, e.g. \"HDMI-A-1\" (wlopm only)"`
+	Locale           string         `json:"locale" doc:"BCP-47 date/time locale for the kiosk clock, e.g. en-US"`
+	HideClockDate    bool           `json:"hide_clock_date" doc:"Hide the clock and date block on the kiosk overlay"`
+	Timezone         string         `json:"timezone" doc:"IANA timezone for the kiosk clock/date, e.g. Europe/Budapest; empty uses the browser timezone"`
+	Labels           KioskLabelsDTO `json:"labels"`
+	DashboardURL     string         `json:"dashboard_url" doc:"URL to open when the frame is touched (e.g. a Home Assistant dashboard); empty disables touch-to-dashboard"`
+	DashboardTimeout string         `json:"dashboard_timeout" doc:"How long to show the dashboard before returning to the frame, e.g. \"5m\"; empty means no auto-return"`
 }
 
 // KioskLabelsDTO maps config.KioskLabelsConfig.
@@ -188,13 +190,15 @@ func toDTO(cfg config.Config) ConfigDTO {
 		LogLevel:         logLevelOrDefault(cfg.LogLevel),
 		BluetoothAdapter: cfg.BluetoothAdapter,
 		Display: DisplayDTO{
-			BlankAfter:    durString(cfg.Display.BlankAfter.Duration),
-			Backend:       cfg.Display.Backend,
-			Output:        cfg.Display.Output,
-			Locale:        cfg.Display.Locale,
-			HideClockDate: cfg.Display.HideClockDate,
-			Timezone:      cfg.Display.Timezone,
-			Labels:        labelsToDTO(cfg.Display.Labels),
+			BlankAfter:       durString(cfg.Display.BlankAfter.Duration),
+			Backend:          cfg.Display.Backend,
+			Output:           cfg.Display.Output,
+			Locale:           cfg.Display.Locale,
+			HideClockDate:    cfg.Display.HideClockDate,
+			Timezone:         cfg.Display.Timezone,
+			Labels:           labelsToDTO(cfg.Display.Labels),
+			DashboardURL:     cfg.Display.DashboardURL,
+			DashboardTimeout: durString(cfg.Display.DashboardTimeout.Duration),
 		},
 		Slideshow: SlideshowDTO{
 			Interval:    durString(cfg.Slideshow.Interval.Duration),
@@ -317,6 +321,10 @@ func applyDisplayDTO(dst *config.DisplayConfig, dto DisplayDTO) error {
 	if err != nil {
 		return err
 	}
+	dashboardTimeout, err := parseDuration(dto.DashboardTimeout, "display.dashboard_timeout")
+	if err != nil {
+		return err
+	}
 	dst.BlankAfter = blankAfter
 	dst.Backend = dto.Backend
 	dst.Output = dto.Output
@@ -324,6 +332,8 @@ func applyDisplayDTO(dst *config.DisplayConfig, dto DisplayDTO) error {
 	dst.HideClockDate = dto.HideClockDate
 	dst.Timezone = dto.Timezone
 	dst.Labels = labelsFromDTO(dto.Labels)
+	dst.DashboardURL = dto.DashboardURL
+	dst.DashboardTimeout = dashboardTimeout
 	return nil
 }
 
@@ -483,13 +493,15 @@ func parseDurationOr(s, field string, fallback config.Duration) (config.Duration
 // (see startup.WeatherEnabled) gates the weather UI.
 func KioskEventPayload(cfg config.Config, weatherActive bool) state.KioskPayload {
 	return state.KioskPayload{
-		Version:       version.Version,
-		Locale:        cfg.Display.Locale,
-		HideClockDate: cfg.Display.HideClockDate,
-		Timezone:      cfg.Display.Timezone,
-		Sensors:       config.SensorKeys(cfg.Sensors),
-		Weather:       weatherActive,
-		Labels:        labelsToState(cfg.Display.Labels),
+		Version:              version.Version,
+		Locale:               cfg.Display.Locale,
+		HideClockDate:        cfg.Display.HideClockDate,
+		Timezone:             cfg.Display.Timezone,
+		Sensors:              config.SensorKeys(cfg.Sensors),
+		Weather:              weatherActive,
+		Labels:               labelsToState(cfg.Display.Labels),
+		DashboardURL:         cfg.Display.DashboardURL,
+		DashboardTimeoutSecs: int(cfg.Display.DashboardTimeout.Seconds()),
 	}
 }
 

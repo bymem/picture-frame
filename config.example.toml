@@ -33,6 +33,12 @@ blank_after = "20m"
 # outside = "Outside"
 # inside = "Inside"
 # humidity = "Humidity"
+#
+# Touch-to-dashboard: tap the screen to open a URL (e.g. a Home Assistant
+# Lovelace dashboard) in the kiosk browser. A back button is shown over the
+# page so you can return to the frame. Omit dashboard_url to disable.
+# dashboard_url     = "http://homeassistant.local:8123/lovelace/0"
+# dashboard_timeout = "5m"    # auto-return after this duration; omit for manual-only
 
 # Slideshow
 

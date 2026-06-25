@@ -1,0 +1,62 @@
+name: dev-build
+
+# Builds Pi binaries from any branch and uploads them as downloadable artifacts.
+# Trigger manually from the Actions tab, or automatically on pushes to this branch.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ha-dashboard
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build frontend
+        run: make build-ui
+        env:
+          PUBLIC_APP_VERSION: dev
+
+      - name: Build Pi binaries
+        run: |
+          mkdir -p dist
+          VERSION="dev-$(git rev-parse --short HEAD)"
+
+          # Pi 3 / Pi 4 / Zero 2W on 32-bit OS
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 \
+            go build -trimpath \
+              -ldflags="-s -w \
+                -X github.com/MateEke/picture-frame/internal/version.Version=$VERSION \
+                -X github.com/MateEke/picture-frame/internal/version.Platform=linux_armv7 \
+                -X github.com/MateEke/picture-frame/internal/version.UpdateRepo=${{ github.repository }}" \
+              -o dist/picture-frame-armv7 ./cmd/picture-frame
+
+          # Pi 3 / Pi 4 / Zero 2W on 64-bit OS
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 \
+            go build -trimpath \
+              -ldflags="-s -w \
+                -X github.com/MateEke/picture-frame/internal/version.Version=$VERSION \
+                -X github.com/MateEke/picture-frame/internal/version.Platform=linux_arm64 \
+                -X github.com/MateEke/picture-frame/internal/version.UpdateRepo=${{ github.repository }}" \
+              -o dist/picture-frame-arm64 ./cmd/picture-frame
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: picture-frame-pi-binaries
+          path: dist/picture-frame-arm*
+          retention-days: 7

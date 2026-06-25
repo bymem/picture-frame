@@ -61,6 +61,10 @@ type KioskPayload struct {
 	Sensors       []string    `json:"sensors"`
 	Weather       bool        `json:"weather"`
 	Labels        KioskLabels `json:"labels"`
+	// DashboardURL is the URL opened on touch; empty means touch-to-dashboard is disabled.
+	DashboardURL string `json:"dashboard_url"`
+	// DashboardTimeoutSecs is how long to show the dashboard before auto-returning; 0 means manual only.
+	DashboardTimeoutSecs int `json:"dashboard_timeout_secs"`
 }
 
 // KioskLabels mirrors config.KioskLabelsConfig; empty strings hide the caption.

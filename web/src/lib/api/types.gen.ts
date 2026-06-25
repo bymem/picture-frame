@@ -130,6 +130,14 @@ export type DisplayDto = {
      */
     blank_after: string;
     /**
+     * URL to open when the frame is touched (e.g. a Home Assistant dashboard); empty disables touch-to-dashboard
+     */
+    dashboard_url: string;
+    /**
+     * How long to show the dashboard before returning to the frame, e.g. "5m"; empty means no auto-return
+     */
+    dashboard_timeout: string;
+    /**
      * Hide the clock and date block on the kiosk overlay
      */
     hide_clock_date: boolean;
@@ -251,6 +259,14 @@ export type KioskLabelsDto = {
 };
 
 export type KioskPayload = {
+    /**
+     * URL opened on touch; empty means touch-to-dashboard is disabled
+     */
+    dashboard_url: string;
+    /**
+     * Seconds to show the dashboard before auto-returning; 0 means manual only
+     */
+    dashboard_timeout_secs: number;
     hide_clock_date: boolean;
     labels: KioskLabels;
     locale: string;

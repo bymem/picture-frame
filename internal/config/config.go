@@ -128,6 +128,12 @@ type DisplayConfig struct {
 	// Labels are the owner-provided captions under the kiosk readings;
 	// an empty string hides that caption.
 	Labels KioskLabelsConfig `toml:"labels"`
+	// DashboardURL is the URL opened when the frame is touched (e.g. a Home Assistant
+	// dashboard). Empty disables the touch-to-dashboard feature entirely.
+	DashboardURL string `toml:"dashboard_url"`
+	// DashboardTimeout is how long to show the dashboard before automatically returning
+	// to the frame. Zero means the user must press the back button manually.
+	DashboardTimeout Duration `toml:"dashboard_timeout"`
 }
 
 // KioskLabelsConfig holds free-text captions, owner wording, not translations.

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { Heartbeat } from '$lib/heartbeat';
 	import { getSSEContext } from '$lib/sse.svelte';
 	import { reloadOnBackendVersionChange } from '$lib/versionReload.svelte';
@@ -16,10 +17,16 @@
 
 	// Reload onto the new bundle after a self-update swaps the binary.
 	reloadOnBackendVersionChange(() => sse.kiosk?.version);
+
+	function handleTouch() {
+		if (!sse.kiosk?.dashboard_url) return;
+		goto('/kiosk/dashboard');
+	}
 </script>
 
 {#if sse.ready}
-	<div class="h-screen w-screen overflow-hidden">
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+	<div class="h-screen w-screen overflow-hidden" onclick={handleTouch}>
 		<Images />
 		<Overlay />
 	</div>

@@ -8,6 +8,7 @@
 	import TimezoneCombobox from './TimezoneCombobox.svelte';
 	import Field from './Field.svelte';
 	import ToggleRow from './ToggleRow.svelte';
+	import { GlobeIcon } from '@lucide/svelte';
 
 	let {
 		slideshow = $bindable(),
@@ -28,6 +29,7 @@
 	const splitChanged = $derived(slideshow.split_screen !== savedSlideshow.split_screen);
 	// structural compare so a new label field is covered without touching this
 	const labelsChanged = $derived(!eq(display.labels, savedDisplay.labels));
+	const dashboardEnabled = $derived(!!display.dashboard_url?.trim());
 </script>
 
 <div class="card bg-surface-100-900 space-y-5 p-6">
@@ -134,4 +136,38 @@
 			/>
 		</div>
 	</Field>
+
+	<div class="border-surface-300-700 border-t pt-5">
+		<h3 class="text-surface-500-400 mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
+			<GlobeIcon class="size-3.5" /> Touch to open dashboard
+		</h3>
+		<div class="space-y-4">
+			<Field
+				label="Dashboard URL"
+				help="URL opened when the frame is touched (e.g. a Home Assistant dashboard). Leave empty to disable."
+				changed={display.dashboard_url !== savedDisplay.dashboard_url}
+				onrevert={() => (display.dashboard_url = savedDisplay.dashboard_url)}
+			>
+				<input
+					class="input"
+					type="url"
+					bind:value={display.dashboard_url}
+					placeholder="http://homeassistant.local:8123/lovelace/0"
+					aria-label="Dashboard URL"
+					data-testid="setting-dashboard-url"
+				/>
+			</Field>
+			{#if dashboardEnabled}
+				<DurationSlider
+					label="Auto-return after"
+					help="Return to the frame automatically after this long. Leave as 'Never' to require pressing the back button."
+					stops={DURATION_STOPS.dashboardTimeout}
+					zeroLabel="Never"
+					bind:value={display.dashboard_timeout}
+					changed={display.dashboard_timeout !== savedDisplay.dashboard_timeout}
+					onrevert={() => (display.dashboard_timeout = savedDisplay.dashboard_timeout)}
+				/>
+			{/if}
+		</div>
+	</div>
 </div>
