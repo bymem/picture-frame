@@ -51,6 +51,14 @@ func (s *server) startHAProxy() {
 				fmt.Sprintf("localhost:%d", haProxyPort), base.Host, 1))
 		}
 	}
+	// Go's ReverseProxy always adds X-Forwarded-For, but HA rejects requests
+	// that carry it unless trusted_proxies is configured. Strip it so HA sees
+	// a plain direct request from the Pi's IP instead.
+	proxy.Transport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		req = req.Clone(req.Context())
+		req.Header.Del("X-Forwarded-For")
+		return http.DefaultTransport.RoundTrip(req)
+	})
 	proxy.ModifyResponse = func(resp *http.Response) error {
 		// Remove headers that block iframe embedding.
 		resp.Header.Del("X-Frame-Options")
@@ -96,6 +104,11 @@ func dashboardProxyURL(dashURL string) string {
 	}
 	return fmt.Sprintf("http://localhost:%d%s", haProxyPort, u.RequestURI())
 }
+
+// roundTripFunc is a functional http.RoundTripper for one-off transport wrappers.
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
 
 // removeCSPDirective strips one directive (e.g. "frame-ancestors") from a
 // Content-Security-Policy header value, returning the rest joined by ";".
