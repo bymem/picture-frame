@@ -33,6 +33,14 @@ func (s *server) startHAProxy() {
 	base := &url.URL{Scheme: target.Scheme, Host: target.Host}
 
 	proxy := httputil.NewSingleHostReverseProxy(base)
+	// The default Director keeps the incoming Host header (localhost:8125).
+	// HA rejects requests whose Host doesn't match its own address, so we
+	// clear it here so Go falls back to using req.URL.Host (192.168.10.20:8123).
+	origDirector := proxy.Director
+	proxy.Director = func(req *http.Request) {
+		origDirector(req)
+		req.Host = ""
+	}
 	proxy.ModifyResponse = func(resp *http.Response) error {
 		// Remove headers that block iframe embedding.
 		resp.Header.Del("X-Frame-Options")
