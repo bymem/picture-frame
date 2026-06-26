@@ -128,9 +128,6 @@ type server struct {
 	liveConfig LiveConfig
 	restart    func() error
 
-	// dashboardMu guards dashboardCancel; see registerDashboardRoutes.
-	dashboardMu     sync.Mutex
-	dashboardCancel context.CancelFunc
 }
 
 // NewServer constructs the root HTTP handler. With Production set it serves the
@@ -200,7 +197,6 @@ func (s *server) registerRoutes(api huma.API) {
 	s.registerImageRoutes(api)
 	s.registerSlideshowRoutes(api)
 	s.registerHeartbeatRoutes(api)
-	s.registerDashboardRoutes(api)
 	s.registerWiFiRoutes(api)
 	s.registerHealthRoutes(api)
 	s.registerSSERoutes(api)
