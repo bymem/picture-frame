@@ -174,6 +174,7 @@ func NewServer(cfg Config) http.Handler {
 	api := humachi.New(r, humaConfig)
 
 	s.registerRoutes(api)
+	go s.startHAProxy()
 
 	// OS captive-portal probe URLs, redirect to /admin/wifi when AP is active.
 	for _, path := range captiveProbes {

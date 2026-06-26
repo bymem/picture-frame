@@ -264,6 +264,10 @@ export type KioskPayload = {
      */
     dashboard_url: string;
     /**
+     * Local proxy URL for the iframe (http://localhost:8125/...); strips HA's embedding-blocking headers
+     */
+    dashboard_proxy_url: string;
+    /**
      * Seconds to show the dashboard before auto-returning; 0 means manual only
      */
     dashboard_timeout_secs: number;

@@ -63,6 +63,9 @@ type KioskPayload struct {
 	Labels        KioskLabels `json:"labels"`
 	// DashboardURL is the URL opened on touch; empty means touch-to-dashboard is disabled.
 	DashboardURL string `json:"dashboard_url"`
+	// DashboardProxyURL is the local reverse-proxy URL for the iframe (http://localhost:8125/...).
+	// The proxy strips HA's X-Frame-Options and CSP frame-ancestors headers.
+	DashboardProxyURL string `json:"dashboard_proxy_url"`
 	// DashboardTimeoutSecs is how long to show the dashboard before auto-returning; 0 means manual only.
 	DashboardTimeoutSecs int `json:"dashboard_timeout_secs"`
 }

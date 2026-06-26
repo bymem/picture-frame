@@ -10,33 +10,32 @@
 		goto('/kiosk');
 	}
 
-	// Auto-return timer: if dashboard_timeout_secs > 0, navigate back after that duration.
-	// The cleanup function fires if the user leaves early (e.g. presses the back button).
+	// Auto-return: if dashboard_timeout_secs > 0, navigate back after that duration.
 	onMount(() => {
 		const timeoutSecs = sse.kiosk?.dashboard_timeout_secs ?? 0;
 		if (timeoutSecs <= 0) return;
-
 		const timer = setTimeout(returnToFrame, timeoutSecs * 1000);
 		return () => clearTimeout(timer);
 	});
 
-	// If SSE is ready but no URL is configured, return to the frame.
+	// If SSE is ready but no proxy URL is available, return to the frame.
 	$effect(() => {
-		if (sse.ready && !sse.kiosk?.dashboard_url) {
+		if (sse.ready && !sse.kiosk?.dashboard_proxy_url) {
 			goto('/kiosk');
 		}
 	});
 </script>
 
-{#if sse.kiosk?.dashboard_url}
+{#if sse.kiosk?.dashboard_proxy_url}
 	<div class="relative h-screen w-screen overflow-hidden">
+		<!-- The proxy at localhost:8125 strips X-Frame-Options and CSP frame-ancestors
+		     from HA's responses, making this iframe embedding work. -->
 		<iframe
-			src={sse.kiosk.dashboard_url}
+			src={sse.kiosk.dashboard_proxy_url}
 			title="Home Assistant dashboard"
 			class="h-full w-full border-0"
 		></iframe>
 
-		<!-- Floating return button, unobtrusive in the top-left corner -->
 		<button
 			onclick={returnToFrame}
 			aria-label="Return to picture frame"
@@ -47,6 +46,5 @@
 		</button>
 	</div>
 {:else}
-	<!-- Shown while SSE is loading before the URL is known. -->
 	<div class="h-screen w-screen bg-black"></div>
 {/if}

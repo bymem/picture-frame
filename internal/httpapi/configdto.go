@@ -501,6 +501,7 @@ func KioskEventPayload(cfg config.Config, weatherActive bool) state.KioskPayload
 		Weather:              weatherActive,
 		Labels:               labelsToState(cfg.Display.Labels),
 		DashboardURL:         cfg.Display.DashboardURL,
+		DashboardProxyURL:    dashboardProxyURL(cfg.Display.DashboardURL),
 		DashboardTimeoutSecs: int(cfg.Display.DashboardTimeout.Seconds()),
 	}
 }
